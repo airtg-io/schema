@@ -1,0 +1,113 @@
+{
+  "id": "6f1c2a8e-4b7d-4c0e-9a51-0d3e2f7b8c91",
+  "schemaVersion": "0.1.0",
+  "producer": {
+    "type": "snmp-poller",
+    "version": "0.3.0",
+    "hostname": "poller-1.example.net"
+  },
+  "time": "2026-11-10T12:00:02Z",
+  "metrics": {
+    "device": {
+      "id": "core-sw1",
+      "address": "192.0.2.10"
+    },
+    "interval": "60s",
+    "samples": [
+      {
+        "capability": "system",
+        "metric": "sysUpTime",
+        "mode": "MODE_RAW",
+        "sourceType": "TimeTicks",
+        "time": "2026-11-10T12:00:00Z",
+        "uintValue": "864000000"
+      },
+      {
+        "capability": "interfaces",
+        "metric": "ifHCInOctets",
+        "table": "ifTable",
+        "index": "1",
+        "labels": {
+          "ifDescr": "GigabitEthernet0/1",
+          "ifName": "Gi0/1"
+        },
+        "mode": "MODE_RAW",
+        "sourceType": "Counter64",
+        "unit": "bytes",
+        "time": "2026-11-10T12:00:01Z",
+        "uintValue": "18446744073709551000"
+      },
+      {
+        "capability": "interfaces",
+        "metric": "ifHCInOctets",
+        "table": "ifTable",
+        "index": "1",
+        "labels": {
+          "ifDescr": "GigabitEthernet0/1",
+          "ifName": "Gi0/1"
+        },
+        "mode": "MODE_RATE",
+        "sourceType": "Counter64",
+        "unit": "bytes/s",
+        "time": "2026-11-10T12:00:01Z",
+        "doubleValue": 1250000.5
+      },
+      {
+        "capability": "interfaces",
+        "metric": "ifHCInOctets",
+        "table": "ifTable",
+        "index": "1",
+        "labels": {
+          "ifDescr": "GigabitEthernet0/1",
+          "ifName": "Gi0/1"
+        },
+        "mode": "MODE_VOLUME",
+        "sourceType": "Counter64",
+        "unit": "bytes",
+        "time": "2026-11-10T12:00:01Z",
+        "doubleValue": 75000030
+      },
+      {
+        "capability": "host-resources",
+        "metric": "hrStorageSizeBytes",
+        "table": "hrStorageTable",
+        "index": "1",
+        "labels": {
+          "hrStorageDescr": "Physical memory"
+        },
+        "mode": "MODE_RAW",
+        "sourceType": "Formula",
+        "unit": "bytes",
+        "time": "2026-11-10T12:00:01Z",
+        "intValue": "17179869184"
+      },
+      {
+        "capability": "host-resources",
+        "metric": "hrStorageUsedPercent",
+        "table": "hrStorageTable",
+        "index": "1",
+        "labels": {
+          "hrStorageDescr": "Physical memory"
+        },
+        "mode": "MODE_RAW",
+        "sourceType": "Formula",
+        "unit": "percent",
+        "time": "2026-11-10T12:00:01Z",
+        "doubleValue": 42.5
+      },
+      {
+        "capability": "entity",
+        "metric": "entPhysicalSoftwareRev",
+        "table": "entPhysicalTable",
+        "index": "1",
+        "labels": {
+          "entPhysicalName": "Chassis"
+        },
+        "mode": "MODE_RAW",
+        "sourceType": "OctetString",
+        "time": "2026-11-10T12:00:01Z",
+        "stringValue": "17.9.4"
+      }
+    ]
+  }
+}

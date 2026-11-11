@@ -1,0 +1,12 @@
+# buf configuration: the .proto files of proto/ form one module.
+# `make lint` and `make breaking` use it; see Makefile.
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+    - COMMENTS   # every message, field, enum and value is documented: this is the contract
+breaking:
+  use:
+    - WIRE_JSON  # binary and JSON encodings stay compatible (renaming a field breaks JSON)

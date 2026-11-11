@@ -1,0 +1,29 @@
+{
+  "id": "8a3f6e21-9c4b-4d7a-b058-1e2f3a4b5c6d",
+  "schemaVersion": "0.1.0",
+  "producer": {
+    "type": "snmp-poller",
+    "version": "0.3.0",
+    "hostname": "poller-7f3k2",
+    "id": "prd-01JC9X4M7Q"
+  },
+  "time": "2026-11-10T12:00:01Z",
+  "tenantId": "acme-corp",
+  "metrics": {
+    "device": {
+      "id": "core-sw1",
+      "address": "192.0.2.10"
+    },
+    "interval": "60s",
+    "samples": [
+      {
+        "capability": "system",
+        "metric": "sysUpTime",
+        "mode": "MODE_RAW",
+        "sourceType": "TimeTicks",
+        "time": "2026-11-10T12:00:00Z",
+        "uintValue": "864000000"
+      }
+    ]
+  }
+}

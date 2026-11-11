@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package airtg.v1;
+
+import "airtg/v1/device.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/airtg-io/schema/airtg/v1;airtgv1";
+
+// Inventory holds what a producer discovered on a device and changes slowly:
+// its capabilities, descriptions and table row names. A producer sends one
+// after every discovery of the device, changed or not. Each one replaces the
+// previous one for the device entirely: it is never a delta.
+message Inventory {
+  // The device the inventory is about.
+  Device device = 1;
+
+  // When the discovery happened.
+  google.protobuf.Timestamp discovered_at = 2;
+
+  // Names of the capabilities found on the device and polled, sorted, e.g.
+  // ["entity", "interfaces", "system"].
+  repeated string capabilities = 3;
+
+  // Discovery scalars, by name, e.g. "sysName", "sysDescr", "sysObjectID",
+  // "sysLocation".
+  map<string, string> scalars = 4;
+
+  // Discovery columns, by name, e.g. "ifName" or "ifAlias".
+  map<string, Column> columns = 5;
+}
+
+// Column holds the values of a discovery column.
+message Column {
+  // Values by row index (the same index as Sample.index), e.g.
+  // {"1": "Gi0/1", "2": "Gi0/2"}.
+  map<string, string> rows = 1;
+}

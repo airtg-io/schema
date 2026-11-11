@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package airtg.v1;
+
+import "airtg/v1/device.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/airtg-io/schema/airtg/v1;airtgv1";
+
+// MetricBatch holds samples polled from one device. A producer may split the
+// samples of one poll into several batches to keep messages small, so a
+// batch is not necessarily a whole poll.
+message MetricBatch {
+  // The device the samples were polled from.
+  Device device = 1;
+
+  // How often the device is polled. Lets consumers tell when data is missing:
+  // nothing received for a few intervals means the device or its producer is
+  // not reporting.
+  google.protobuf.Duration interval = 2;
+
+  // The samples, in no particular order.
+  repeated Sample samples = 3;
+}
+
+// Sample is one value of one metric, of one table row for table metrics.
+message Sample {
+  // Name of the capability defining the metric: a group of metrics a device
+  // supports, e.g. "interfaces", "host-resources", "cisco-cpu".
+  string capability = 1;
+
+  // Name of the metric: the scalar name, or the table column name, e.g.
+  // "uptime" or "ifHCInOctets". Unique within its capability.
+  string metric = 2;
+
+  // Name of the table of a table metric, e.g. "ifTable"; empty for a scalar.
+  string table = 3;
+
+  // Row index of a table metric (the SNMP OID suffix of the row, e.g. "3" or
+  // "1.4.6"); empty for a scalar. Identifies the row within the table on this
+  // device, possibly only until the device reboots: labels are more stable.
+  string index = 4;
+
+  // The values identifying the row for people, from the device's discovery,
+  // e.g. {"ifDescr": "GigabitEthernet0/1", "ifName": "Gi0/1"}. Empty for a
+  // scalar. The same values are in the device's Inventory columns; they are
+  // repeated here so that a sample can be understood on its own.
+  map<string, string> labels = 5;
+
+  // How the value is derived from what the device reports.
+  Mode mode = 6;
+
+  // Type of the value read from the device, the SNMP type name (e.g.
+  // "Counter64", "Gauge32", "TimeTicks", "OctetString"), or "Formula" for a
+  // value computed from other values.
+  string source_type = 7;
+
+  // Unit of the value, e.g. "bytes", "percent", "seconds", with "/s"
+  // appended for a rate (e.g. "bytes/s"). Empty when not known.
+  string unit = 8;
+
+  // When the value was read from the device.
+  google.protobuf.Timestamp time = 9;
+
+  // The value. A RAW sample holds the type the device's value maps to (e.g.
+  // uint for counters, string for octet strings); a RATE or VOLUME sample is
+  // always a double; a formula gives an int or a double.
+  oneof value {
+    // A signed integer.
+    int64 int_value = 10;
+    // An unsigned integer: SNMP counters, gauges and time ticks.
+    uint64 uint_value = 11;
+    // A floating point number.
+    double double_value = 12;
+    // A string, UTF-8 encoded.
+    string string_value = 13;
+  }
+}
+
+// Mode tells how a sample's value is derived from what the device reports.
+enum Mode {
+  // Not set: never sent by a valid producer.
+  MODE_UNSPECIFIED = 0;
+  // The value as read from the device, or computed by a formula.
+  MODE_RAW = 1;
+  // The per second rate of change of a counter between two polls,
+  // (v2 - v1) / (t2 - t1), counter wraps and resets handled.
+  MODE_RATE = 2;
+  // The increase of a counter between two polls, v2 - v1, counter wraps and
+  // resets handled.
+  MODE_VOLUME = 3;
+}

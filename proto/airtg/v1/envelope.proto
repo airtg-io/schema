@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package airtg.v1;
+
+import "airtg/v1/inventory.proto";
+import "airtg/v1/metrics.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/airtg-io/schema/airtg/v1;airtgv1";
+
+// Envelope is the only message sent on the wire: every message published on
+// an airtg.v1 subject is one binary-encoded Envelope. It carries what every
+// message has in common, and exactly one payload.
+message Envelope {
+  // Unique id of the message, chosen by the producer (e.g. a UUID). A
+  // message sent again, for instance after a lost acknowledgement or from a
+  // disk buffer, keeps its id: it is also sent as the Nats-Msg-Id header so
+  // that JetStream drops the duplicate.
+  string id = 1;
+
+  // Version of this schema the producer was built with, without the "v"
+  // prefix (e.g. "1.4.0"). For diagnostics only: decoding never depends on it.
+  string schema_version = 2;
+
+  // The program that produced the message.
+  Producer producer = 3;
+
+  // When the producer created the message.
+  google.protobuf.Timestamp time = 4;
+
+  // Id of the tenant the producer says the data belongs to, in deployments
+  // serving several tenants (SaaS). Empty when there is no tenant, as in
+  // on-premises deployments. When set, it matches
+  // ^[A-Za-z0-9][A-Za-z0-9._-]*$ and is at most 255 bytes long.
+  //
+  // For debugging and logging only. It is never used for authorization,
+  // isolation or routing: a producer can put anything here. The tenant a
+  // message really belongs to is the one of the credentials the producer
+  // authenticated with (e.g. its NATS account), and ids are unique within
+  // that tenant: a device is identified by (authenticated tenant, device
+  // id), a producer by (authenticated tenant, producer id).
+  string tenant_id = 5;
+
+  // The content of the message. A payload unknown to the consumer, sent by a
+  // producer built with a newer schema, decodes as no payload: consumers
+  // ignore such envelopes (and should count them) instead of failing.
+  oneof payload {
+    // Samples polled from one device.
+    MetricBatch metrics = 10;
+    // Slow-changing data discovered on one device.
+    Inventory inventory = 11;
+  }
+}
+
+// Producer identifies the program that produced a message.
+message Producer {
+  // Type of producer: the program collecting the data, e.g. "snmp-poller".
+  string type = 1;
+
+  // Version of the program, e.g. "0.3.0".
+  string version = 2;
+
+  // Host name of the machine or container the producer runs on.
+  // Informational: it may change, and two producers may share it.
+  string hostname = 3;
+
+  // Unique id of the producer installation, assigned when it registers in a
+  // deployment serving several tenants (SaaS), or taken from a serial
+  // number. Stable across restarts and host changes. Empty when not
+  // assigned, as in on-premises deployments. When set, it matches
+  // ^[A-Za-z0-9][A-Za-z0-9._-]*$ and is at most 255 bytes long.
+  string id = 4;
+}

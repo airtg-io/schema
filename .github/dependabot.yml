@@ -1,0 +1,19 @@
+# Keeps the Go dependencies (the protobuf runtime and protoc-gen-go in go.mod,
+# buf in tools/go.mod) and the GitHub Actions up to date. A protobuf update
+# changes the generated code's header: CI fails until `make generate` is run
+# and committed on the Dependabot branch.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directories:
+      - /
+      - /tools
+    schedule:
+      interval: weekly
+    groups:
+      go:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,11 @@
+# Code generation: `make generate`. airtg/ is entirely generated and wiped on
+# every run (clean: true): never put hand-written code there.
+version: v2
+clean: true
+plugins:
+  # protoc-gen-go is a tool of the main module (go.mod), so the generator is
+  # always the version of the google.golang.org/protobuf runtime consumers get.
+  - local: ["go", "tool", "protoc-gen-go"]
+    out: airtg
+    opt:
+      - module=github.com/airtg-io/schema/airtg

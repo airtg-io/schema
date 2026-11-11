@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package airtg.v1;
+
+option go_package = "github.com/airtg-io/schema/airtg/v1;airtgv1";
+
+// Device identifies the device a payload is about.
+message Device {
+  // The device's id from the point of view of the producer that sent it: for
+  // snmp-poller, the id configured for the device (by default
+  // <address>-<port>). Consumers use it as the key tying together what is
+  // sent about the device: its metrics and inventory, and later its events,
+  // logs and topology. It stays the same over time, and producers collecting
+  // from the same device should use the same id. It matches
+  // ^[A-Za-z0-9][A-Za-z0-9._-]*$ and is at most 255 bytes long.
+  //
+  // It is not meant to be the only way to identify what data is about: other
+  // identities may be added as new fields later, e.g. a cluster id for the
+  // members of a clustered device, or ids found by discovery (such as a
+  // serial number) rather than configured. Consumers should not assume that
+  // id is the only identity a Device will ever carry.
+  string id = 1;
+
+  // Management address the producer reaches the device at: an IP address or
+  // a host name, without port. Informational: it may change, use id to
+  // identify the device.
+  string address = 2;
+}

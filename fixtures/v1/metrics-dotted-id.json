@@ -1,0 +1,27 @@
+{
+  "id": "c4a9e0f2-1d38-4b5a-8e67-93f0b2d1a6c5",
+  "schemaVersion": "0.1.0",
+  "producer": {
+    "type": "snmp-poller",
+    "version": "0.3.0",
+    "hostname": "poller-1.example.net"
+  },
+  "time": "2026-11-10T12:00:01Z",
+  "metrics": {
+    "device": {
+      "id": "10.0.0.1-161",
+      "address": "10.0.0.1"
+    },
+    "interval": "300s",
+    "samples": [
+      {
+        "capability": "system",
+        "metric": "sysUpTime",
+        "mode": "MODE_RAW",
+        "sourceType": "TimeTicks",
+        "time": "2026-11-10T12:00:00Z",
+        "uintValue": "4200"
+      }
+    ]
+  }
+}

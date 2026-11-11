@@ -1,0 +1,95 @@
+# Check every push to main and every pull request. On a push to main whose
+# VERSION file holds a version not released yet (no tag v<version>), also tag
+# that commit and publish a GitHub release: the tag is what consumers `go get`.
+# An unchanged VERSION only checks.
+
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release: ${{ steps.version.outputs.release }}
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0   # every tag: `make breaking` compares with the last release
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+        cache-dependency-path: |
+          go.sum
+          tools/go.sum
+
+    - name: Version
+      id: version
+      run: |
+        version=$(tr -d '[:space:]' < VERSION)
+        # Go module tags need all three numbers.
+        if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "::error file=VERSION::invalid version '$version': expected MAJOR.MINOR.PATCH"
+          exit 1
+        fi
+        release=false
+        if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/main ]; then
+          # --exit-code: 0 = tag exists, 2 = no such tag, else a git error.
+          rc=0
+          git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null || rc=$?
+          case $rc in
+            0) echo "v$version is already released: check only" ;;
+            2) echo "v$version is new: it will be released"; release=true ;;
+            *) echo "::error::cannot list the tags of origin (git exit code $rc)"; exit 1 ;;
+          esac
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "release=$release" >> "$GITHUB_OUTPUT"
+
+    # gofmt and buf format, buf lint, generated code up to date, go.mod
+    # tidy, vet, tests (fixtures included).
+    - name: Check
+      run: make check
+
+    # Wire/JSON compatibility and unchanged fixtures since the last release:
+    # fails from 1.0.0, only warns before.
+    - name: Breaking changes
+      run: make breaking
+
+  release:
+    needs: check
+    if: needs.check.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the tag and the release
+    # Releases never run concurrently, so two quick pushes cannot race.
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+    - name: Create tag and release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: v${{ needs.check.outputs.version }}
+      run: |
+        # Checked again: another run may have released it meanwhile.
+        if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          echo "$TAG already released"
+          exit 0
+        fi
+        gh release create "$TAG" \
+          --repo "$GITHUB_REPOSITORY" \
+          --target "$GITHUB_SHA" \
+          --title "AIrtg schema $TAG" \
+          --generate-notes
