@@ -18,9 +18,10 @@
         "capability": "system",
         "metric": "sysUpTime",
         "mode": "MODE_RAW",
-        "sourceType": "TimeTicks",
+        "sourceType": "Formula",
+        "unit": "second",
         "time": "2026-11-10T12:00:00Z",
-        "uintValue": "4200"
+        "doubleValue": 42
       }
     ]
   }

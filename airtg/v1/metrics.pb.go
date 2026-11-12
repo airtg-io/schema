@@ -176,8 +176,16 @@ type Sample struct {
 	// "Counter64", "Gauge32", "TimeTicks", "OctetString"), or "Formula" for a
 	// value computed from other values.
 	SourceType string `protobuf:"bytes,7,opt,name=source_type,json=sourceType,proto3" json:"source_type,omitempty"`
-	// Unit of the value, e.g. "bytes", "percent", "seconds", with "/s"
-	// appended for a rate (e.g. "bytes/s"). Empty when not known.
+	// Unit of the value, as the source defines it: values are collected as
+	// close to their source as possible, never scaled to a common unit across
+	// products (a device reporting kilobytes is sent in "kilobyte", one
+	// reporting bytes in "byte"). Lowercase singular names from the schema's
+	// unit vocabulary (schema.Units, README "Units"), e.g. "octet", "packet",
+	// "percent", "second", "kilobyte", "allocation unit", "bit/s", "enum".
+	// A RATE sample appends "/s" to the unit of its counter ("octet/s"). A
+	// formula's value has the unit of its inputs, or the one their
+	// combination gives (allocation unit x byte = "byte"). Required for every
+	// numeric value; empty only for a string value.
 	Unit string `protobuf:"bytes,8,opt,name=unit,proto3" json:"unit,omitempty"`
 	// When the value was read from the device.
 	Time *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=time,proto3" json:"time,omitempty"`

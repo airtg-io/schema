@@ -104,9 +104,34 @@ gauges and time ticks, `string_value` for octet strings, `int_value` or `double_
 formulas). `MODE_RATE` (per second) and `MODE_VOLUME` (increase since the previous poll) are
 always `double_value`, counter wraps and resets already handled.
 
-**Units.** Lowercase and plural: `bytes`, `bits`, `packets`, `percent`, `seconds`, `celsius`,
-`watts`, ... Sizes are always in bytes, never KiB or allocation units. A rate appends `/s`
-(`bytes/s`). Empty when unknown.
+**Units.** Every numeric value carries its unit; only a string value may have none.
+Collectors send values as close to their source as possible, in the unit the source uses,
+and never normalize across products: a device reporting kilobytes is sent in `kilobyte`, one
+reporting bytes in `byte`, and consumers convert if they need to.
+
+- Units are lowercase singular words of the vocabulary `schema.Units`, the same everywhere:
+  `percent`, never `%` or `pct`. Validate with `schema.ValidUnit`. A unit a collector needs and
+  the vocabulary lacks is added to it in a new minor version, never invented.
+
+  | Kind | Units |
+  |------|-------|
+  | Data | `bit`, `kilobit`, `megabit`, `gigabit`, `byte`, `kilobyte`, `megabyte`, `gigabyte`, `terabyte`, `octet`, `allocation unit` |
+  | Network | `packet`, `frame`, `segment` (TCP), `datagram` (UDP) |
+  | Time | `nanosecond`, `microsecond`, `millisecond`, `second`, `minute`, `hour`, `day` |
+  | Ratio | `percent` |
+  | Things counted | `connection`, `entry`, `error`, `event`, `message`, `process`, `request`, `route`, `session`, `thread`, `user` |
+  | Physical | `celsius`, `fahrenheit`, `kelvin`, `milliwatt`, `watt`, `kilowatt`, `watt-hour`, `kilowatt-hour`, `volt-ampere`, `millivolt`, `volt`, `milliampere`, `ampere`, `hertz`, `kilohertz`, `megahertz`, `gigahertz`, `rpm`, `decibel`, `dbm` |
+  | Codes | `enum`: a number that names a state or a thing rather than measuring a quantity (ifOperStatus 1 up, 2 down, ...; a process id) |
+
+- The unit names what the source counts: IF-MIB's `ifInOctets` is in `octet`, not `byte`.
+- A rate appends `/s` to the unit of its counter (`octet/s`), and so does a source value that is
+  a rate itself (`ifSpeed` in `bit/s`, `ifHighSpeed` in `megabit/s`).
+- A formula's value has the unit of its inputs, or the one their combination gives:
+  `hrStorageSize` (`allocation unit`) times `hrStorageAllocationUnits` (`byte`) is in `byte`, a
+  ratio times 100 in `percent`. A formula that would only scale a value (kilobytes to bytes)
+  is not written: the source value is sent as it is.
+- One exception for time: SNMP time ticks (hundredths of a second) are converted to `second`,
+  the unit everyone uses for durations; `centisecond` is not in the vocabulary.
 
 **Rows.** A table sample has both `table` and `index`, a scalar neither. `index` may change
 when a device reboots; `labels` (also in the inventory's `columns`) name the row for people

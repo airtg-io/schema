@@ -66,35 +66,35 @@ var all = []fixture{
 				Samples: []*airtgv1.Sample{
 					{
 						Capability: "system", Metric: "sysUpTime", Mode: airtgv1.Mode_MODE_RAW,
-						SourceType: "TimeTicks", Time: ts(0),
-						Value: &airtgv1.Sample_UintValue{UintValue: 864000000},
+						SourceType: "Formula", Unit: "second", Time: ts(0),
+						Value: &airtgv1.Sample_DoubleValue{DoubleValue: 8640000},
 					},
 					{
 						Capability: "interfaces", Metric: "ifHCInOctets", Table: "ifTable", Index: "1",
 						Labels: ifLabels, Mode: airtgv1.Mode_MODE_RAW, SourceType: "Counter64",
-						Unit: "bytes", Time: ts(time.Second),
+						Unit: "octet", Time: ts(time.Second),
 						Value: &airtgv1.Sample_UintValue{UintValue: 18446744073709551000},
 					},
 					{
 						Capability: "interfaces", Metric: "ifHCInOctets", Table: "ifTable", Index: "1",
 						Labels: ifLabels, Mode: airtgv1.Mode_MODE_RATE, SourceType: "Counter64",
-						Unit: "bytes/s", Time: ts(time.Second),
+						Unit: "octet/s", Time: ts(time.Second),
 						Value: &airtgv1.Sample_DoubleValue{DoubleValue: 1250000.5},
 					},
 					{
 						Capability: "interfaces", Metric: "ifHCInOctets", Table: "ifTable", Index: "1",
 						Labels: ifLabels, Mode: airtgv1.Mode_MODE_VOLUME, SourceType: "Counter64",
-						Unit: "bytes", Time: ts(time.Second),
+						Unit: "octet", Time: ts(time.Second),
 						Value: &airtgv1.Sample_DoubleValue{DoubleValue: 75000030},
 					},
 					{
-						Capability: "host-resources", Metric: "hrStorageSizeBytes", Table: "hrStorageTable",
+						Capability: "host-resources", Metric: "storageSize", Table: "hrStorageTable",
 						Index: "1", Labels: map[string]string{"hrStorageDescr": "Physical memory"},
-						Mode: airtgv1.Mode_MODE_RAW, SourceType: "Formula", Unit: "bytes", Time: ts(time.Second),
+						Mode: airtgv1.Mode_MODE_RAW, SourceType: "Formula", Unit: "byte", Time: ts(time.Second),
 						Value: &airtgv1.Sample_IntValue{IntValue: 17179869184},
 					},
 					{
-						Capability: "host-resources", Metric: "hrStorageUsedPercent", Table: "hrStorageTable",
+						Capability: "host-resources", Metric: "storageUsedPercent", Table: "hrStorageTable",
 						Index: "1", Labels: map[string]string{"hrStorageDescr": "Physical memory"},
 						Mode: airtgv1.Mode_MODE_RAW, SourceType: "Formula", Unit: "percent", Time: ts(time.Second),
 						Value: &airtgv1.Sample_DoubleValue{DoubleValue: 42.5},
@@ -147,8 +147,8 @@ var all = []fixture{
 				Interval: durationpb.New(5 * time.Minute),
 				Samples: []*airtgv1.Sample{{
 					Capability: "system", Metric: "sysUpTime", Mode: airtgv1.Mode_MODE_RAW,
-					SourceType: "TimeTicks", Time: ts(0),
-					Value: &airtgv1.Sample_UintValue{UintValue: 4200},
+					SourceType: "Formula", Unit: "second", Time: ts(0),
+					Value: &airtgv1.Sample_DoubleValue{DoubleValue: 42},
 				}},
 			}},
 		},
@@ -168,8 +168,8 @@ var all = []fixture{
 				Interval: durationpb.New(time.Minute),
 				Samples: []*airtgv1.Sample{{
 					Capability: "system", Metric: "sysUpTime", Mode: airtgv1.Mode_MODE_RAW,
-					SourceType: "TimeTicks", Time: ts(0),
-					Value: &airtgv1.Sample_UintValue{UintValue: 864000000},
+					SourceType: "Formula", Unit: "second", Time: ts(0),
+					Value: &airtgv1.Sample_DoubleValue{DoubleValue: 8640000},
 				}},
 			}},
 		},
@@ -321,11 +321,15 @@ func TestContract(t *testing.T) {
 				if (s.GetTable() == "") != (s.GetIndex() == "") {
 					t.Errorf("%s: table and index must be both set or both empty: %v", f.name, s)
 				}
+				_, isString := s.GetValue().(*airtgv1.Sample_StringValue)
+				if !isString && !schema.ValidUnit(s.GetUnit()) || isString && s.GetUnit() != "" && !schema.ValidUnit(s.GetUnit()) {
+					t.Errorf("%s: unit %q is not in schema.Units: %v", f.name, s.GetUnit(), s)
+				}
 				if s.GetMode() != airtgv1.Mode_MODE_RAW {
 					if _, ok := s.GetValue().(*airtgv1.Sample_DoubleValue); !ok {
 						t.Errorf("%s: rate/volume must be a double: %v", f.name, s)
 					}
-					if s.GetMode() == airtgv1.Mode_MODE_RATE && s.GetUnit() != "" && !strings.HasSuffix(s.GetUnit(), "/s") {
+					if s.GetMode() == airtgv1.Mode_MODE_RATE && !strings.HasSuffix(s.GetUnit(), "/s") {
 						t.Errorf("%s: rate unit without /s: %v", f.name, s)
 					}
 				}

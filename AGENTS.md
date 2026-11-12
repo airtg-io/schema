@@ -40,6 +40,13 @@ in `README.md`.
   `schema.Version`. CI (`.github/workflows/go.yml`) checks every push/PR; a push to main
   whose version has no tag `v<version>` creates the tag and a GitHub release. Never create
   release tags by hand.
+- **Units** (user decision, applies to every collector): every numeric `Sample` has a unit,
+  the source's own, lowercase singular, from `schema.Units` (`units.go`, `ValidUnit`); never
+  normalized across products (Cisco bytes stay `byte`, Juniper megabytes `megabyte`); rates
+  append `/s`; formulas keep the unit of their inputs (no scaling-only formulas); one name per
+  unit (`percent`, never `%`); SNMP time ticks are converted to `second` (no `centisecond`).
+  New units are added to the vocabulary in a minor version, never invented by a collector.
+  `TestContract` checks the fixtures follow it.
 - **Fixtures** (`fixtures/`): defined in `fixtures_test.go`, files in `fixtures/v1/`
   (`<name>.binpb` + `<name>.json`, `unknown-payload` binary only), exposed as `fixtures.FS`.
   Append-only: `make fixtures` (`-update`) only writes missing files; tests compare files
