@@ -15,8 +15,9 @@ analyzer receive.
 - **Compatibility checked in CI** against the last release: binary and JSON encodings, and
   unchanged fixtures.
 
-Licensed under the Apache License 2.0 (see [LICENSE](LICENSE)), so anyone can produce or
-consume AIrtg data, in any program, under any license.
+Copyright 2026 AIrtg Solutions, inc. Licensed under the Apache License 2.0 (see
+[LICENSE](LICENSE) and [NOTICE](NOTICE)), so anyone can produce or consume AIrtg data, in any
+program, under any license.
 
 ## Contents
 
